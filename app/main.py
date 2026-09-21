@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
+from app.apis.medical_record_apis import medical_record_router
+from app.apis.patient_apis import patient_router
 from app.apis.practice_apis import router as practice_router
 from app.apis.user_apis import auth_router, user_router
 
@@ -26,6 +28,8 @@ app.mount("/media", StaticFiles(directory=BASE_DIR / "media"), name="media")
 app.include_router(practice_router)
 app.include_router(user_router)
 app.include_router(auth_router)
+app.include_router(patient_router)
+app.include_router(medical_record_router)
 
 @app.get(path="/healthcheck", status_code=200, include_in_schema=False)
 async def healthcheck():

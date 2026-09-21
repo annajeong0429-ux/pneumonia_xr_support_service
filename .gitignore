@@ -21,3 +21,6 @@ envs/
 .env
 
 .python-version
+
+# 업로드된 미디어 파일 (런타임에 생성되는 데이터, 소스코드 아님)
+media/
