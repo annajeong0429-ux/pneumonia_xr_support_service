@@ -12,7 +12,7 @@ class Ai_analysis_results(Base, TimestampMixin):
     id :Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     record_id : Mapped[int] = mapped_column(ForeignKey('medical_records.id', ondelete='CASCADE'))
     is_pneumonia : Mapped[bool] = mapped_column(Boolean)
-    confidence : Mapped[Decimal] = mapped_column(DECIMAL(precision=5, scale=2))
-    heatmap_url : Mapped[str] = mapped_column(String(255))
+    confidence : Mapped[Decimal] = mapped_column(DECIMAL(precision=5, scale=4))
+    heatmap_url : Mapped[str | None] = mapped_column(String(255), nullable=True)
     ai_model : Mapped[str] = mapped_column(String(50))
     
