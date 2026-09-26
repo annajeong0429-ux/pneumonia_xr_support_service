@@ -12,7 +12,7 @@ const pages = {
         const actions = document.getElementById('home-actions');
         if (!state.user) {
             actions.innerHTML = '<button onclick="navigate(\'/login\')">로그인하여 시작하기</button>';
-        } else if (state.user.role === 'pending') {
+        } else if (state.user.role === 'PENDING') {
             actions.innerHTML = '<p>관리자의 승인을 기다리는 중입니다.</p>';
         } else {
             actions.innerHTML = '<button onclick="navigate(\'/patients\')">환자 목록 보기</button>';
@@ -62,8 +62,8 @@ const pages = {
                 <td>${p.id}</td>
                 <td>${p.name}</td>
                 <td>${p.age}</td>
-                <td>${p.gender === 'male' ? '남성' : '여성'}</td>
-                <td>${utils.formatPhoneNumber(p.phone_number)}</td>
+                <td>${p.gender === 'M' ? '남성' : '여성'}</td>
+                <td>${utils.formatPhoneNumber(p.phone)}</td>
                 <td><button onclick="navigate('/patients/${p.id}')">상세보기</button></td>
             </tr>
         `).join('');
@@ -88,12 +88,12 @@ const pages = {
         app.innerHTML = html;
         
         // 환자 정보 표시
-        document.getElementById('patient-name').innerText = `${patient.name} (${patient.gender === 'male' ? '남성' : '여성'})`;
-        document.getElementById('patient-info').innerText = `나이: ${patient.age}세 | 연락처: ${utils.formatPhoneNumber(patient.phone_number)}`;
-        
+        document.getElementById('patient-name').innerText = `${patient.name} (${patient.gender === 'M' ? '남성' : '여성'})`;
+        document.getElementById('patient-info').innerText = `나이: ${patient.age}세 | 연락처: ${utils.formatPhoneNumber(patient.phone)}`;
+
         // 수정 폼 초기값 설정
         document.getElementById('update-name').value = patient.name;
-        document.getElementById('update-phone').value = utils.formatPhoneNumber(patient.phone_number);
+        document.getElementById('update-phone').value = utils.formatPhoneNumber(patient.phone);
         
         const updatePhoneInput = document.getElementById('update-phone');
         if (updatePhoneInput) {
@@ -178,7 +178,7 @@ const pages = {
                             <tr class="${a.is_pneumonia ? 'result-positive' : 'result-negative'}">
                                 <td>${new Date(a.created_at).toLocaleString()}</td>
                                 <td><strong>${a.is_pneumonia ? 'Positive' : 'Negative'}</strong></td>
-                                <td>${a.confidence}%</td>
+                                <td>${(a.confidence * 100).toFixed(2)}%</td>
                                 <td>${a.ai_model}</td>
                             </tr>
                         `).join('')}
@@ -197,7 +197,7 @@ const pages = {
         document.getElementById('me-email').innerText = state.user.email;
         document.getElementById('me-name-display').innerText = state.user.name;
         document.getElementById('me-department-display').innerText = state.user.department;
-        document.getElementById('me-gender-display').innerText = state.user.gender === 'male' ? '남성' : '여성';
+        document.getElementById('me-gender-display').innerText = state.user.gender === 'M' ? '남성' : '여성';
         document.getElementById('me-phone-display').innerText = utils.formatPhoneNumber(state.user.phone_number);
         document.getElementById('me-role-display').innerText = state.user.role;
 
@@ -226,7 +226,7 @@ const pages = {
         // 필드 값 복원
         const queryInput = document.getElementById('admin-search-query');
         const deptSelect = document.getElementById('admin-filter-dept');
-        if (queryInput && params.query) queryInput.value = params.query;
+        if (queryInput && params.search) queryInput.value = params.search;
         if (deptSelect && params.department) deptSelect.value = params.department;
 
         const listBody = document.getElementById('admin-users-list');
@@ -243,9 +243,9 @@ const pages = {
                 <td>${utils.formatPhoneNumber(u.phone_number)}</td>
                 <td>
                     <select onchange="pages.handleRoleUpdate(${u.id}, this.value)" ${u.id === state.user.id ? 'disabled' : ''}>
-                        <option value="pending" ${u.role === 'pending' ? 'selected' : ''}>승인대기</option>
-                        <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>일반회원</option>
-                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>관리자</option>
+                        <option value="PENDING" ${u.role === 'PENDING' ? 'selected' : ''}>승인대기</option>
+                        <option value="STAFF" ${u.role === 'STAFF' ? 'selected' : ''}>일반회원</option>
+                        <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>관리자</option>
                     </select>
                 </td>
                 <td>${u.is_active ? '<span class="status-badge success">활성</span>' : '<span class="status-badge error">비활성</span>'}</td>
@@ -260,7 +260,7 @@ const pages = {
         const department = document.getElementById('admin-filter-dept').value;
         
         const params = new URLSearchParams();
-        if (query) params.set('query', query);
+        if (query) params.set('search', query);
         if (department) params.set('department', department);
         
         const queryString = params.toString();
@@ -274,7 +274,7 @@ const pages = {
 
     async handleRoleUpdate(userId, newRole) {
         try {
-            await apis.adminUpdateUserRole({ user_id: userId, new_role: newRole });
+            await apis.adminUpdateUserRole(userId, newRole);
             utils.showAlert('권한이 변경되었습니다.', 'success');
             this.handleAdminSearch();
         } catch (err) {
@@ -304,7 +304,7 @@ const pages = {
     async handleUpdatePassword(e) {
         e.preventDefault();
         const data = {
-            current_password: document.getElementById('old-password').value,
+            old_password: document.getElementById('old-password').value,
             new_password: document.getElementById('new-password').value
         };
 
@@ -325,9 +325,11 @@ const pages = {
 
     async handleDeleteMe() {
         if (!confirm('정말로 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.')) return;
+        const password = prompt('본인 확인을 위해 비밀번호를 입력해주세요.');
+        if (!password) return;
 
         try {
-            await apis.deleteMe();
+            await apis.deleteMe(password);
             utils.showAlert('탈퇴 처리가 완료되었습니다.', 'success');
             logout(); // (app.js)
         } catch (err) {
@@ -373,7 +375,7 @@ const pages = {
             name: document.getElementById('name').value,
             age: parseInt(document.getElementById('age').value),
             gender: document.getElementById('gender').value,
-            phone_number: document.getElementById('phone_number').value.replace(/[^\d]/g, '')
+            phone: document.getElementById('phone_number').value.replace(/[^\d]/g, '')
         };
         
         try {
@@ -436,7 +438,7 @@ const pages = {
         const patientId = state.currentPatientId;
         const updateData = {
             name: document.getElementById('update-name').value,
-            phone_number: document.getElementById('update-phone').value.replace(/[^\d]/g, '')
+            phone: document.getElementById('update-phone').value.replace(/[^\d]/g, '')
         };
 
         try {
