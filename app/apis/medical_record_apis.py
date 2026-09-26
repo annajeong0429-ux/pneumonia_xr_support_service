@@ -56,7 +56,7 @@ async def get_medical_record_detail(
     xray = await xray_image_repository.get_by_record_id(db, record_id)
 
     return MedicalRecordDetailResponse(
-        id=record_id, chart_number=record.chart_number, 
+        id=record_id, patient_id=record.patient_id, chart_number=record.chart_number,
         symptoms=record.symptoms, xray_image_url=xray.image_url if xray is not None else None,
         created_at=record.created_at,)
     

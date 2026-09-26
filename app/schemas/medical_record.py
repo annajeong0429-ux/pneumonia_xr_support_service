@@ -20,6 +20,7 @@ class MedicalRecordCreateResponse(BaseModel):
 
 class MedicalRecordDetailResponse(BaseModel):
     id: int
+    patient_id: int
     chart_number: str
     symptoms: str
     xray_image_url: str | None
