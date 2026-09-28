@@ -1,0 +1,33 @@
+# 환경변수 파일 (보안 - 이미지에 시크릿 포함 방지)
+.env
+
+# Python 캐시
+__pycache__/
+*.py[cod]
+
+# 린터/타입체커 캐시
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# 가상환경 (컨테이너 안에서 uv sync로 새로 만들기 때문에 불필요)
+.venv/
+
+# Git
+.git/
+.gitignore
+
+# 도커 관련 설정 파일 (빌드 컨텍스트에 넣을 필요 없음)
+docker-compose.yml
+
+# 문서
+docs/
+README.md
+
+# IDE 설정
+.vscode/
+.idea/
+.claude/
+
+# 업로드된 미디어 (런타임 데이터, 볼륨으로 마운트되므로 이미지에 불필요)
+media/
